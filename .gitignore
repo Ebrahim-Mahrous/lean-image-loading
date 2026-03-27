@@ -379,3 +379,5 @@ ipch/
 *.ncb
 *.opendb
 *.db
+/learn-png.vcxproj.filters
+/learn-png.vcxproj
