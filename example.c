@@ -14,21 +14,24 @@ int main(int argc, char* argv[]) {
 	if (error < 0) {
 		return error;
 	}
+	iFreeImage(&image1);
+	
 	error = iLoadImage(&image2, "example2.png");
 	if (error < 0) {
 		return error;
 	}
+	iFreeImage(&image2);
+	
 	error = iLoadImage(&image3, "example3.png");
 	if (error < 0) {
 		return error;
 	}
+	iFreeImage(&image3);
+
 	error = iLoadImage(&image4, "example4.png");
 	if (error < 0) {
 		return error;
 	}
-	iFreeImage(&image1);
-	iFreeImage(&image2);
-	iFreeImage(&image3);
 	iFreeImage(&image4);
 	
 	return 0;
