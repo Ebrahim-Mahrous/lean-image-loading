@@ -14,7 +14,7 @@ static int32_t iLoadImagePNG(Image* image, const uint8_t* data, uint64_t size) {
   
     image->width = png.ihdr.imageWidth;
     image->height = png.ihdr.imageHeight;
-    image->bytesPerPixel = (png.ihdr.colorType == 0) ? 1 : (png.ihdr.colorType == 2 || png.ihdr.colorType == 3) ? 3 : (png.ihdr.colorType == 6) ? 4 : 0;
+    image->bytesPerPixel = BytesPerColorTypePNG(png.ihdr.colorType);
     imageSizeBytes = image->width * image->height * image->bytesPerPixel;
     if (!imageSizeBytes) {
         FreePNG(&png);
@@ -79,10 +79,26 @@ int32_t iLoadImage(Image* image, const char* fileName)
     fclose(file);
     return 1;
 }
-
+#ifdef _WIN32
+#pragma optimize( "", off )
 void iFreeImage(Image* image)
 {
     if (!image) return; // NOP
     if (!image->data) return;
+    image->width = 0;
+    image->height = 0;
+    image->bytesPerPixel = 0;
     free(image->data);
 }
+#pragma optimize( "", on )
+#else
+void iFreeImage(Image* image)
+{
+    if (!image) return; // NOP
+    if (!image->data) return;
+    image->width = 0;
+    image->height = 0;
+    image->bytesPerPixel = 0;
+    free(image->data);
+}
+#endif

@@ -125,7 +125,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <BufferSecurityCheck />
       <BasicRuntimeChecks />
-      <AssemblerOutput>All</AssemblerOutput>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

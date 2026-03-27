@@ -47,7 +47,7 @@ static inline const uint8_t* GetBytes(PNG* png, uint64_t n) {
 	return ret;
 }
 
-static inline uint32_t BytesPerColorType(uint32_t type) {
+inline uint32_t BytesPerColorTypePNG(uint32_t type) {
 	return (type == 2 || type == 3) ? 3 : (type == 6) ? 4 : (type == 0) ? 1 : 0;
 }
 
@@ -61,9 +61,9 @@ static int32_t PaethPredictor(int32_t a, int32_t b, int32_t c) {
 	else return c;
 }
 
-static void DefilterPNG(PNG* png, uint8_t* unfiltered, uint8_t* pixels, uint64_t outSize) {
+static void DefilterPNG(PNG* png, uint8_t* unfiltered, uint8_t* pixels) {
 	uint32_t outIdx = 0;
-	uint32_t bpp = png->isPlte ? 1 : BytesPerColorType(png->ihdr.colorType);
+	uint32_t bpp = png->isPlte ? 1 : BytesPerColorTypePNG(png->ihdr.colorType);
 	uint32_t stride = png->ihdr.imageWidth * bpp;
 	uint32_t filterType = 0;
 	uint8_t* offset = unfiltered;
@@ -126,6 +126,13 @@ static void DefilterPNG(PNG* png, uint8_t* unfiltered, uint8_t* pixels, uint64_t
 	}
 }
 
+static void DeindexPNG(PNG* png, uint8_t* indices, uint8_t* pixels) {
+	size_t size = (uint64_t)png->ihdr.imageWidth * (uint64_t)png->ihdr.imageHeight;
+	for (size_t i = 0; i < size; ++i) {
+		*(RGB*)&pixels[3 * i] = png->plte.pEntries[indices[i]];
+	}
+}
+
 int32_t IsPNG(const uint8_t* data, uint64_t size) {
 	DEBUG(data);
 
@@ -174,6 +181,7 @@ int32_t InitPNG(PNG* png, const uint8_t* data, uint64_t inSize)
 		}
 		case 'ETLP':
 		{
+			png->isPlte = 1;
 			if (chunk.length % 3 != 0) {
 				free(png->pChunks);
 				return -3;
@@ -214,6 +222,10 @@ int32_t LoadPNG(PNG* png, uint8_t* output, uint64_t outSize)
 	DEBUG(png);
 	DEBUG(output);
 	DEBUG(outSize);
+
+	if (!png->isInit) {
+		return -6;
+	}
 
 	int32_t error = 0;
 	ZlibReader zlib = { 0 };
@@ -263,10 +275,20 @@ int32_t LoadPNG(PNG* png, uint8_t* output, uint64_t outSize)
 		return error;
 	}
 
-	//if (png->isPlte) {
-	//	DeindexPNG(png);
-	//}
-	DefilterPNG(png, uncompressed, output, outSize);
+	if (png->isPlte) {
+		uint8_t* tmp = (uint8_t*)calloc(1, outSize);
+		if (!tmp) {
+			free(uncompressed);
+			free(compressed);
+			return -2;
+		}
+		DefilterPNG(png, uncompressed, tmp);
+		DeindexPNG(png, tmp, output);
+		free(tmp);
+	}
+	else {
+		DefilterPNG(png, uncompressed, output);
+	}
 
 	free(uncompressed);
 	free(compressed);

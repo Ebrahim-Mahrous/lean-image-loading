@@ -62,6 +62,7 @@ typedef struct PNG
 int32_t IsPNG(const uint8_t* data, uint64_t size);
 int32_t InitPNG(PNG* png, const uint8_t *data, uint64_t inSize);
 int32_t LoadPNG(PNG* png, uint8_t* ouput, uint64_t outSize);
+inline uint32_t BytesPerColorTypePNG(uint32_t type);
 void FreePNG(PNG* png);
 
 #endif
